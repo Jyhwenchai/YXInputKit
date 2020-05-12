@@ -7,14 +7,14 @@
 #
 
 Pod::Spec.new do |s|
-s.name             = 'InputKit'
-s.version          = '0.1.0'
+s.name             = 'YXInputKit'
+s.version          = '0.1.1'
 s.summary          = 'Subclasses of UITextField and UITextView'
 s.description      = 'Subclasses of UITextField and UITextView. Provide placeholder, secureTextEntry, clearView support for UITextField, so that UITextField and UITextView provide the ability to count words.'
-s.homepage         = 'https://github.com/Jyhwenchai/InputKit'
+s.homepage         = 'https://github.com/Jyhwenchai/YXInputKit'
 s.license          = { :type => 'MIT', :file => 'LICENSE' }
 s.author           = { 'Jyhwenchai' => 'cai5301@qq.com' }
-s.source           = { :git => 'https://github.com/Jyhwenchai/InputKit.git', :tag => s.version.to_s }
+s.source           = { :git => 'https://github.com/Jyhwenchai/YXInputKit.git', :tag => s.version.to_s }
 s.ios.deployment_target = '9.0'
 s.swift_version = '5.0'
 s.source_files = 'InputKit/Classes/**/*'
