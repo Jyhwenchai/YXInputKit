@@ -1,0 +1,16 @@
+PODS:
+  - YXInputKit (0.1.0)
+
+DEPENDENCIES:
+  - YXInputKit (from `../`)
+
+EXTERNAL SOURCES:
+  YXInputKit:
+    :path: "../"
+
+SPEC CHECKSUMS:
+  YXInputKit: f2d46ab458bce82dae4fc1d51440fc236e08ff1e
+
+PODFILE CHECKSUM: 3108e222438f94a87b232eecb477b0d830af5133
+
+COCOAPODS: 1.9.1

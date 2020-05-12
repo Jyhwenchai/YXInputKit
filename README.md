@@ -22,7 +22,7 @@ pod 'YXInputKit'
 
 ## Author
 
-Jyhwenchai, cai5301@qq.com
+ilosic, cai5301@qq.com
 
 ## License
 
