@@ -69,6 +69,13 @@ open class YXTextField: UITextField {
         }
     }
     
+    open var rightContainerSpacing: CGFloat = 0 {
+        didSet {
+            rightContainerView.spacing = rightContainerSpacing
+            setNeedsLayout()
+        }
+    }
+    
     @IBInspectable open var rightPadding: CGFloat = 0 {
         didSet {
             rightPaddingView.spacing = rightPadding
@@ -215,7 +222,7 @@ open class YXTextField: UITextField {
     public var matchInputClosure: ((Bool) -> Void)?
     
     
-    override init(frame: CGRect) {
+    override public init(frame: CGRect) {
         super.init(frame: frame)
         setup()
     }
@@ -361,7 +368,7 @@ private extension YXTextField {
             secureEntryButton?.addTarget(self, action: #selector(toggleSecureEntryAction), for: .touchUpInside)
             var index = 0
             if let  clearView = clearView {
-                index = clearView.tag
+                index = clearView.tag + 1
             } else if let attachView = rightAttachView {
                 index = attachView.tag
             }

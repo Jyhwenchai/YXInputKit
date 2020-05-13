@@ -34,8 +34,15 @@ open class YXTextView: UITextView {
         didSet { updatePlaceholder() }
     }
     
-    @IBInspectable public var placeholderPadding: UIEdgeInsets = UIEdgeInsets(top: 8, left: 5, bottom: 0, right: 5) {
+    @IBInspectable public var placeholderPadding: UIEdgeInsets = UIEdgeInsets(top: 8, left: 4, bottom: 8, right: 0) {
         didSet { updatePlaceholderLayout() }
+    }
+    
+    open override var textContainerInset: UIEdgeInsets {
+        didSet {
+            placeholderPadding = textContainerInset
+            placeholderPadding.left += 4    // fix placeholderLabel position
+        }
     }
     
     //MARK: Counter
@@ -81,6 +88,24 @@ open class YXTextView: UITextView {
         }
     }
     
+    // Layer
+    @IBInspectable var borderWidth: CGFloat = 0 {
+        didSet { layer.borderWidth = borderWidth }
+    }
+    
+    @IBInspectable var borderColor: UIColor = .clear {
+        didSet { layer.borderColor = borderColor.cgColor }
+    }
+    
+    @IBInspectable var cornerRadius: CGFloat = 0 {
+        didSet { layer.cornerRadius = cornerRadius }
+    }
+    
+    private let visableLayer = CALayer()
+    
+    private var cacheText: String = ""
+    private var cacheSelectedRange: NSRange = NSRange(location: -1, length: 0)
+    
     public override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
         setup()
@@ -92,16 +117,24 @@ open class YXTextView: UITextView {
     }
     
     func setup() {
+        showsVerticalScrollIndicator = false
+        visableLayer.backgroundColor = UIColor.white.cgColor
         addSubview(placeholderLabel)
         addSubview(counterLabel)
         updatePlaceholderLayout()
         let textChangedSelector = #selector(textDidChanged)
         NotificationCenter.default.addObserver(self, selector: textChangedSelector, name: UITextView.textDidChangeNotification, object: self)
+        
+        for view in subviews where "\(type(of: view.self))" == "_UITextContainerView" {
+            view.layer.mask = visableLayer
+        }
+       
     }
     
     
     open override func layoutSubviews() {
         super.layoutSubviews()
+
         let frame = placeholderLabel.textRect(
             forBounds:
                 CGRect(x: placeholderPadding.left,
@@ -118,15 +151,25 @@ open class YXTextView: UITextView {
             y: bounds.height - size.height - counterPadding.bottom,
             width: bounds.width - counterPadding.left - counterPadding.right,
             height: size.height)
+       
+        var counterFrame = counterLabel.frame
+        counterFrame.origin.y += contentOffset.y
+        counterLabel.frame = counterFrame
         
+        CATransaction.begin()
+        _  = CATransaction.setDisableActions(true)
+        visableLayer.frame = CGRect(x: 0, y: contentOffset.y + textContainerInset.top, width: bounds.width, height: bounds.height - textContainerInset.top - textContainerInset.bottom)
+        CATransaction.commit()
     }
-
     
     @objc private func textDidChanged() {
         placeholderLabel.isHidden = text.count > 0
         if markedTextRange?.start == nil, isCounterEnable {
             updateLimitNumberOfText()
         }
+        
+        let offset = contentSize.height > bounds.height ? contentSize.height - bounds.height : 0
+        setContentOffset(CGPoint(x: 0, y: offset), animated: false)
     }
     
     
@@ -134,7 +177,7 @@ open class YXTextView: UITextView {
         if let placeholder = placeholder {
             self.placeholderLabel.attributedText = nil
             self.placeholderLabel.text = placeholder
-            self.placeholderLabel.font = placeholderFont ?? font
+            self.placeholderLabel.font = (placeholderFont ?? font) ?? UIFont.systemFont(ofSize: 12)
             self.placeholderLabel.textColor = placeholderColor ?? textColor
             return
         }
@@ -154,10 +197,14 @@ open class YXTextView: UITextView {
     
     
     private func updateLimitNumberOfText() {
-        guard let string = text else { return }
+        guard let _ = text else { return }
+       
+        if self.cacheSelectedRange.location == -1 {
+            self.cacheSelectedRange = selectedRange
+        }
+       
         let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        
-        guard let data = string.data(using: encoding) else { return }
+        guard let data = text.data(using: encoding) else { return}
         let length = data.count
         if length > limitNumbers {
             let subData = data.subdata(in: 0 ..< limitNumbers)
@@ -167,12 +214,51 @@ open class YXTextView: UITextView {
                 let subData = data.subdata(in: 0 ..< limitNumbers - 1)
                 content = String(data: subData, encoding: encoding)
             }
-            text =  content
-            updateCounterDisplay(limitNumbers)
+            
+            
+        
+            let preStartIndex = text.startIndex
+            let preEndIndex = text.index(preStartIndex, offsetBy: self.cacheSelectedRange.location)
+            let prefixString = text[preStartIndex..<preEndIndex]
+            
+            let suffixStartIndex = text.index(preStartIndex, offsetBy: selectedRange.location)
+            let suffixString = text[suffixStartIndex..<text.endIndex]
+
+            var addText = text!
+            addText.removeSubrange(suffixStartIndex..<text.endIndex)
+            let addEndIndex = addText.index(preStartIndex, offsetBy: self.cacheSelectedRange.location)
+            addText.removeSubrange(addText.startIndex..<addEndIndex)
+            
+            
+            let subLength = limitNumbers - calcuteLength(with: String(prefixString)) - calcuteLength(with: String(suffixString))
+            let saveText = getSubString(from: addText, subLength: subLength)
+            text = prefixString + saveText + suffixString
+            self.cacheSelectedRange.location = self.cacheSelectedRange.location + saveText.count
+            selectedRange = self.cacheSelectedRange
+            updateCounterDisplay(calcuteLength(with: text))
         } else {
-            text = string
             updateCounterDisplay(length)
         }
+        
+        cacheText = text
+        self.cacheSelectedRange = selectedRange
+    }
+    
+    func getSubString(from string: String, subLength: Int) -> String {
+        let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+        guard let data = string.data(using: encoding), subLength > 0 else { return "" }
+        let length = data.count
+        if length >= subLength {
+            let subData = data.subdata(in: 0 ..< subLength)
+            // 当截取超出最大长度字符时把中文字符截断返回的 content 会是 nil
+            var content = String(data: subData, encoding: encoding)
+            if content == nil {
+                let subData = data.subdata(in: 0 ..< subLength - 1)
+                content = String(data: subData, encoding: encoding)
+            }
+            return content ?? ""
+        }
+        return ""
     }
     
     func updateCounterStyle() {
@@ -198,4 +284,17 @@ open class YXTextView: UITextView {
         }
     }
     
+    func calcuteLength(with text: String) -> Int {
+         let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
+        guard let data = text.data(using: encoding) else { return 0}
+        return data.count
+    }
+    
+    open override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            self.cacheSelectedRange = self.selectedRange
+            print(self.selectedRange)
+        }
+        return super.hitTest(point, with: event)
+    }
 }
