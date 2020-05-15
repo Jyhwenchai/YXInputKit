@@ -70,13 +70,12 @@ open class YXTextView: UITextView {
         didSet { updateCounterStyle() }
     }
     
-    var counterPadding: UIEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 5, right: 5) {
+    open var counterPadding: UIEdgeInsets = UIEdgeInsets(top: 0, left: 0, bottom: 5, right: 5) {
         didSet { updateCounterStyle() }
     }
     
-    
     open var counterClosure: ((Int, Int, UILabel) -> ())? {
-        didSet { updateCounterDisplay(0) }
+        didSet { updateCounterDisplay(text.count) }
     }
     
     open override var text: String! {
@@ -103,8 +102,28 @@ open class YXTextView: UITextView {
     
     private let visableLayer = CALayer()
     
+    private var containerView: UIView?
+    
     private var cacheText: String = ""
-    private var cacheSelectedRange: NSRange = NSRange(location: -1, length: 0)
+    
+    fileprivate var cacheSelectedRange: NSRange = NSRange()
+    
+    @IBInspectable var isTransparent = false {
+        didSet {
+            guard let containerView = containerView else { return }
+            containerView.layer.mask = isTransparent ? nil : visableLayer
+        }
+    }
+    
+    private var delegateRelay: TextViewDelegateRelay?
+    open override var delegate: UITextViewDelegate? {
+        get { super.delegate }
+        set {
+            let delegateRelay = TextViewDelegateRelay(realDelegate: newValue)
+            super.delegate = delegateRelay
+            self.delegateRelay = delegateRelay
+        }
+    }
     
     public override init(frame: CGRect, textContainer: NSTextContainer?) {
         super.init(frame: frame, textContainer: textContainer)
@@ -116,19 +135,22 @@ open class YXTextView: UITextView {
         setup()
     }
     
+
     func setup() {
         showsVerticalScrollIndicator = false
         visableLayer.backgroundColor = UIColor.white.cgColor
         addSubview(placeholderLabel)
         addSubview(counterLabel)
         updatePlaceholderLayout()
+        
         let textChangedSelector = #selector(textDidChanged)
         NotificationCenter.default.addObserver(self, selector: textChangedSelector, name: UITextView.textDidChangeNotification, object: self)
-        
-        for view in subviews where "\(type(of: view.self))" == "_UITextContainerView" {
-            view.layer.mask = visableLayer
-        }
        
+        for view in subviews where "\(type(of: view.self))" == "_UITextContainerView" {
+            containerView = view
+        }
+        isTransparent = false
+        self.delegate = nil
     }
     
     
@@ -158,7 +180,7 @@ open class YXTextView: UITextView {
         
         CATransaction.begin()
         _  = CATransaction.setDisableActions(true)
-        visableLayer.frame = CGRect(x: 0, y: contentOffset.y + textContainerInset.top, width: bounds.width, height: bounds.height - textContainerInset.top - textContainerInset.bottom)
+        visableLayer.frame = CGRect(x: 0, y: contentOffset.y, width: bounds.width, height: bounds.height - textContainerInset.bottom)
         CATransaction.commit()
     }
     
@@ -197,43 +219,27 @@ open class YXTextView: UITextView {
     
     
     private func updateLimitNumberOfText() {
-        guard let _ = text else { return }
-       
-        if self.cacheSelectedRange.location == -1 {
-            self.cacheSelectedRange = selectedRange
-        }
-       
-        let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        guard let data = text.data(using: encoding) else { return}
-        let length = data.count
+ 
+        let length = calcuteLength(with: text)
         if length > limitNumbers {
-            let subData = data.subdata(in: 0 ..< limitNumbers)
-            // 当截取超出最大长度字符时把中文字符截断返回的 content 会是 nil
-            var content = String(data: subData, encoding: encoding)
-            if content == nil {
-                let subData = data.subdata(in: 0 ..< limitNumbers - 1)
-                content = String(data: subData, encoding: encoding)
-            }
+            let prefixStartIndex = text.startIndex
+            let prefixEndIndex = text.index(prefixStartIndex, offsetBy: self.cacheSelectedRange.location)
+            let prefixString = text[prefixStartIndex..<prefixEndIndex]
             
-            
-        
-            let preStartIndex = text.startIndex
-            let preEndIndex = text.index(preStartIndex, offsetBy: self.cacheSelectedRange.location)
-            let prefixString = text[preStartIndex..<preEndIndex]
-            
-            let suffixStartIndex = text.index(preStartIndex, offsetBy: selectedRange.location)
+            let suffixStartIndex = text.index(prefixStartIndex, offsetBy: selectedRange.location)
             let suffixString = text[suffixStartIndex..<text.endIndex]
 
             var addText = text!
             addText.removeSubrange(suffixStartIndex..<text.endIndex)
-            let addEndIndex = addText.index(preStartIndex, offsetBy: self.cacheSelectedRange.location)
+            let addEndIndex = addText.index(prefixStartIndex, offsetBy: self.cacheSelectedRange.location)
             addText.removeSubrange(addText.startIndex..<addEndIndex)
             
-            
-            let subLength = limitNumbers - calcuteLength(with: String(prefixString)) - calcuteLength(with: String(suffixString))
-            let saveText = getSubString(from: addText, subLength: subLength)
-            text = prefixString + saveText + suffixString
-            self.cacheSelectedRange.location = self.cacheSelectedRange.location + saveText.count
+            /// Remaining length
+            let remainLength = limitNumbers - calcuteLength(with: String(prefixString)) - calcuteLength(with: String(suffixString))
+            let insertText = getSubString(from: addText, limitLength: remainLength)
+            text = prefixString + insertText + suffixString
+            self.cacheSelectedRange.location = self.cacheSelectedRange.location + insertText.count
+            self.cacheSelectedRange.length = 0;
             selectedRange = self.cacheSelectedRange
             updateCounterDisplay(calcuteLength(with: text))
         } else {
@@ -244,16 +250,16 @@ open class YXTextView: UITextView {
         self.cacheSelectedRange = selectedRange
     }
     
-    func getSubString(from string: String, subLength: Int) -> String {
+    func getSubString(from string: String, limitLength: Int) -> String {
         let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        guard let data = string.data(using: encoding), subLength > 0 else { return "" }
+        guard let data = string.data(using: encoding), limitLength > 0 else { return "" }
         let length = data.count
-        if length >= subLength {
-            let subData = data.subdata(in: 0 ..< subLength)
+        if length >= limitLength {
+            let subData = data.subdata(in: 0 ..< limitLength)
             // 当截取超出最大长度字符时把中文字符截断返回的 content 会是 nil
             var content = String(data: subData, encoding: encoding)
             if content == nil {
-                let subData = data.subdata(in: 0 ..< subLength - 1)
+                let subData = data.subdata(in: 0 ..< limitLength - 1)
                 content = String(data: subData, encoding: encoding)
             }
             return content ?? ""
@@ -290,11 +296,113 @@ open class YXTextView: UITextView {
         return data.count
     }
     
-    open override func hitTest(_ point: CGPoint, with event: UIEvent?) -> UIView? {
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-            self.cacheSelectedRange = self.selectedRange
-            print(self.selectedRange)
-        }
-        return super.hitTest(point, with: event)
+}
+
+//MARK: - TextViewDelegateRelay
+fileprivate class TextViewDelegateRelay: DelegateRelay, UITextViewDelegate  {
+  
+  @available(iOS 2.0, *)
+  func textViewShouldBeginEditing(_ textView: UITextView) -> Bool  {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldBeginEditing = realDelegate.textViewShouldBeginEditing?(textView) else {
+        return true
     }
+    return shouldBeginEditing
+  }
+  
+  @available(iOS 2.0, *)
+  func textViewShouldEndEditing(_ textView: UITextView) -> Bool {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldEndEditing = realDelegate.textViewShouldEndEditing?(textView) else {
+        return true
+    }
+    return shouldEndEditing
+  }
+  
+  @available(iOS 2.0, *)
+  func textViewDidBeginEditing(_ textView: UITextView) {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
+    realDelegate.textViewDidBeginEditing?(textView)
+  }
+  
+  @available(iOS 2.0, *)
+  func textViewDidEndEditing(_ textView: UITextView) {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
+    realDelegate.textViewDidEndEditing?(textView)
+  }
+  
+
+  @available(iOS 2.0, *)
+  func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+
+    if let textView = textView as? YXTextView, textView.markedTextRange?.start == nil {
+        textView.cacheSelectedRange = textView.selectedRange
+    }
+    
+    var flag = true
+    if let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldChange = realDelegate.textView?(textView, shouldChangeTextIn: range, replacementText: text) {
+      flag = shouldChange
+    }
+    return flag
+
+  }
+  
+  @available(iOS 2.0, *)
+  func textViewDidChange(_ textView: UITextView) {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
+    realDelegate.textViewDidChange?(textView)
+  }
+  
+  @available(iOS 2.0, *)
+  func textViewDidChangeSelection(_ textView: UITextView) {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
+    realDelegate.textViewDidChangeSelection?(textView)
+  }
+  
+  @available(iOS 10.0, *)
+  func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldInteract = realDelegate.textView?(textView,
+                                                  shouldInteractWith: URL,
+                                                  in: characterRange,
+                                                  interaction: interaction) else {
+                                                    return true
+    }
+    return shouldInteract
+  }
+  
+  @available(iOS 10.0, *)
+  func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldInteract = realDelegate.textView?(textView,
+                                                  shouldInteractWith: textAttachment,
+                                                  in: characterRange,
+                                                  interaction: interaction) else {
+                                                    return true
+    }
+    return shouldInteract
+  }
+  
+  @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView:shouldInteractWithURL:inRange:forInteractionType: instead")
+  func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldInteract = realDelegate.textView?(textView,
+                                                  shouldInteractWith: URL,
+                                                  in: characterRange) else {
+                                                    return true
+    }
+    return shouldInteract
+  }
+  
+  @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView:shouldInteractWithTextAttachment:inRange:forInteractionType: instead")
+  func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange) -> Bool {
+    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
+      let shouldInteract = realDelegate.textView?(textView,
+                                                  shouldInteractWith: textAttachment,
+                                                  in: characterRange) else {
+                                                    return true
+    }
+    return shouldInteract
+  }
 }

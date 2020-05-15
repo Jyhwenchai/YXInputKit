@@ -208,7 +208,7 @@ open class YXTextField: UITextField {
     }
     
     open var counterClosure: ((Int, Int, UILabel) -> ())? {
-        didSet { updateCounterDisplay(0) }
+        didSet { updateCounterDisplay(text?.count ?? 0) }
     }
     
     
@@ -281,6 +281,7 @@ open class YXTextField: UITextField {
     @objc private func textClearAction() {
         text = nil
         updateClearViewState()
+        updateCounterDisplay(text?.count ?? 0)
     }
     
     deinit {

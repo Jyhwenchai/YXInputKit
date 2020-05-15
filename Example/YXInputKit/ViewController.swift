@@ -23,7 +23,7 @@ class ViewController: UIViewController {
         textField.secureEntryOffImageName = "icon_display"
         textField.borderWidth = 5
         textField.borderColor = .orange
-        textField.placeholder = "Hello, World!"
+        textField.placeholder = "please input something"
         textField.placeholderColor = .cyan
         textField.cornerRadius = 22
         textField.isCounterEnable = true
@@ -36,19 +36,20 @@ class ViewController: UIViewController {
         
         
         let textView = YXTextView(frame: CGRect(x: 20, y: 250, width: view.bounds.width - 40, height: 120))
-        textView.limitNumbers = 2000
+        textView.limitNumbers = 200
         textView.text = "因为公司有很多模块，几乎每个模块都需要发布视频、语言、照片。所以在很多库的基础上，搭建了一个集合，其中包括带placeHolder的TextView、录制小视频、录制音频、选择照片或拍照。"
         textView.isCounterEnable = true
-        textView.placeholder = "Hello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, WorldHello, World"
+        textView.placeholder = "please input something"
         textView.counterClosure = { (count, maxValue, label) in
-//            print("TextView counter: \(count)/\(maxValue)")
+            print("TextView counter: \(count)/\(maxValue)")
         }
         textView.layer.borderColor = UIColor.red.cgColor
         textView.layer.borderWidth = 5.0
         textView.layer.cornerRadius = 10
-        textView.textContainerInset = UIEdgeInsets(top: 15, left: 15, bottom: 25, right: 5)
+        textView.textContainerInset = UIEdgeInsets(top: 15, left: 15, bottom: 45, right: 5)
+        textView.counterPadding = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 10)
         view.addSubview(textView)
-        
+
     }
 
     override func didReceiveMemoryWarning() {
@@ -56,5 +57,5 @@ class ViewController: UIViewController {
         // Dispose of any resources that can be recreated.
     }
 
-}
 
+}
