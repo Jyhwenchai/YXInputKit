@@ -36,7 +36,7 @@ class ViewController: UIViewController {
         
         
         let textView = YXTextView(frame: CGRect(x: 20, y: 250, width: view.bounds.width - 40, height: 120))
-        textView.limitNumbers = 200
+        textView.limitNumbers = 100
         textView.text = "因为公司有很多模块，几乎每个模块都需要发布视频、语言、照片。所以在很多库的基础上，搭建了一个集合，其中包括带placeHolder的TextView、录制小视频、录制音频、选择照片或拍照。"
         textView.isCounterEnable = true
         textView.placeholder = "please input something"
@@ -49,6 +49,7 @@ class ViewController: UIViewController {
         textView.textContainerInset = UIEdgeInsets(top: 15, left: 15, bottom: 45, right: 5)
         textView.counterPadding = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 10)
         view.addSubview(textView)
+
 
     }
 

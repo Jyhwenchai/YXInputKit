@@ -220,7 +220,7 @@ open class YXTextView: UITextView {
     
     private func updateLimitNumberOfText() {
  
-        let length = calcuteLength(with: text)
+        let length = text.count
         if length > limitNumbers {
             let prefixStartIndex = text.startIndex
             let prefixEndIndex = text.index(prefixStartIndex, offsetBy: self.cacheSelectedRange.location)
@@ -235,13 +235,13 @@ open class YXTextView: UITextView {
             addText.removeSubrange(addText.startIndex..<addEndIndex)
             
             /// Remaining length
-            let remainLength = limitNumbers - calcuteLength(with: String(prefixString)) - calcuteLength(with: String(suffixString))
+            let remainLength = limitNumbers - String(prefixString).count - String(suffixString).count
             let insertText = getSubString(from: addText, limitLength: remainLength)
             text = prefixString + insertText + suffixString
             self.cacheSelectedRange.location = self.cacheSelectedRange.location + insertText.count
             self.cacheSelectedRange.length = 0;
             selectedRange = self.cacheSelectedRange
-            updateCounterDisplay(calcuteLength(with: text))
+            updateCounterDisplay(text.count)
         } else {
             updateCounterDisplay(length)
         }
@@ -290,119 +290,108 @@ open class YXTextView: UITextView {
         }
     }
     
-    func calcuteLength(with text: String) -> Int {
-         let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        guard let data = text.data(using: encoding) else { return 0}
-        return data.count
-    }
-    
 }
 
 //MARK: - TextViewDelegateRelay
 fileprivate class TextViewDelegateRelay: DelegateRelay, UITextViewDelegate  {
   
-  @available(iOS 2.0, *)
-  func textViewShouldBeginEditing(_ textView: UITextView) -> Bool  {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldBeginEditing = realDelegate.textViewShouldBeginEditing?(textView) else {
+    @available(iOS 2.0, *)
+    func textViewShouldBeginEditing(_ textView: UITextView) -> Bool  {
+        if canResponseSelector(#selector(textViewShouldBeginEditing(_:))) {
+            return realDelegate?.textViewShouldBeginEditing(textView) ?? true
+        }
         return true
-    }
-    return shouldBeginEditing
-  }
-  
-  @available(iOS 2.0, *)
-  func textViewShouldEndEditing(_ textView: UITextView) -> Bool {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldEndEditing = realDelegate.textViewShouldEndEditing?(textView) else {
-        return true
-    }
-    return shouldEndEditing
-  }
-  
-  @available(iOS 2.0, *)
-  func textViewDidBeginEditing(_ textView: UITextView) {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
-    realDelegate.textViewDidBeginEditing?(textView)
-  }
-  
-  @available(iOS 2.0, *)
-  func textViewDidEndEditing(_ textView: UITextView) {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
-    realDelegate.textViewDidEndEditing?(textView)
-  }
-  
-
-  @available(iOS 2.0, *)
-  func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-
-    if let textView = textView as? YXTextView, textView.markedTextRange?.start == nil {
-        textView.cacheSelectedRange = textView.selectedRange
     }
     
-    var flag = true
-    if let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldChange = realDelegate.textView?(textView, shouldChangeTextIn: range, replacementText: text) {
-      flag = shouldChange
+    @available(iOS 2.0, *)
+    func textViewShouldEndEditing(_ textView: UITextView) -> Bool {
+        if canResponseSelector(#selector(textViewShouldEndEditing(_:))) {
+            return realDelegate?.textViewShouldEndEditing(textView) ?? true
+        }
+        return true
     }
-    return flag
-
-  }
-  
-  @available(iOS 2.0, *)
-  func textViewDidChange(_ textView: UITextView) {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
-    realDelegate.textViewDidChange?(textView)
-  }
-  
-  @available(iOS 2.0, *)
-  func textViewDidChangeSelection(_ textView: UITextView) {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate else { return }
-    realDelegate.textViewDidChangeSelection?(textView)
-  }
-  
-  @available(iOS 10.0, *)
-  func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldInteract = realDelegate.textView?(textView,
-                                                  shouldInteractWith: URL,
-                                                  in: characterRange,
-                                                  interaction: interaction) else {
-                                                    return true
+    
+    @available(iOS 2.0, *)
+    func textViewDidBeginEditing(_ textView: UITextView) {
+        if canResponseSelector(#selector(textViewDidBeginEditing(_:))) {
+            realDelegate?.textViewDidBeginEditing(textView)
+        }
     }
-    return shouldInteract
-  }
-  
-  @available(iOS 10.0, *)
-  func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldInteract = realDelegate.textView?(textView,
-                                                  shouldInteractWith: textAttachment,
-                                                  in: characterRange,
-                                                  interaction: interaction) else {
-                                                    return true
+    
+    @available(iOS 2.0, *)
+    func textViewDidEndEditing(_ textView: UITextView) {
+        if canResponseSelector(#selector(textViewDidEndEditing(_:))) {
+            realDelegate?.textViewDidEndEditing(textView)
+        }
     }
-    return shouldInteract
-  }
-  
-  @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView:shouldInteractWithURL:inRange:forInteractionType: instead")
-  func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldInteract = realDelegate.textView?(textView,
-                                                  shouldInteractWith: URL,
-                                                  in: characterRange) else {
-                                                    return true
+    
+    
+    @available(iOS 2.0, *)
+    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
+        
+        if let textView = textView as? YXTextView, textView.markedTextRange?.start == nil {
+            textView.cacheSelectedRange = textView.selectedRange
+        }
+        
+        if canResponseSelector(#selector(textView(_:shouldChangeTextIn:replacementText:))) {
+            return realDelegate?.textView(textView, shouldChangeTextIn: range, replacementText: text) ?? true
+        }
+        
+        return true
+        
     }
-    return shouldInteract
-  }
-  
-  @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView:shouldInteractWithTextAttachment:inRange:forInteractionType: instead")
-  func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange) -> Bool {
-    guard let realDelegate = self.realDelegate as? UITextViewDelegate,
-      let shouldInteract = realDelegate.textView?(textView,
-                                                  shouldInteractWith: textAttachment,
-                                                  in: characterRange) else {
-                                                    return true
+    
+    @available(iOS 2.0, *)
+    func textViewDidChange(_ textView: UITextView) {
+        if canResponseSelector(#selector(textViewDidChange(_:))) {
+            realDelegate?.textViewDidChange?(textView)
+        }
     }
-    return shouldInteract
-  }
+    
+    @available(iOS 2.0, *)
+    func textViewDidChangeSelection(_ textView: UITextView) {
+        if canResponseSelector(#selector(textViewDidChangeSelection(_:))) {
+            realDelegate?.textViewDidChangeSelection?(textView)
+        }
+    }
+    
+    @available(iOS 10.0, *)
+    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:interaction:) as (UITextView, URL, NSRange, UITextItemInteraction) -> Bool)) {
+            return realDelegate?.textView(textView, shouldInteractWith: URL, in: characterRange, interaction: interaction) ?? true
+        }
+        return true
+    }
+    
+    @available(iOS 10.0, *)
+    func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
+        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:interaction:) as (UITextView, NSTextAttachment, NSRange, UITextItemInteraction) -> Bool)) {
+            return realDelegate?.textView(textView, shouldInteractWith: textAttachment, in: characterRange, interaction: interaction) ?? true
+        }
+        return true
+    }
+    
+    @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView(_:shouldInteractWith:in:interaction:) instead.")
+    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
+        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:) as (UITextView, URL, NSRange) -> Bool)) {
+            return realDelegate?.textView(textView, shouldInteractWith: URL, in: characterRange) ?? true
+        }
+        return true
+    }
+    
+    @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView(_:shouldInteractWith:in:interaction:) instead.")
+    func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange) -> Bool {
+        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:) as (UITextView, NSTextAttachment, NSRange) -> Bool)) {
+            return realDelegate?.textView(textView, shouldInteractWith: textAttachment, in: characterRange) ?? true
+        }
+        return true
+    }
+    
+    func canResponseSelector(_ selector: Selector) -> Bool {
+        if let canResponse = realDelegate?.responds(to: selector), canResponse {
+            return true
+        }
+        return false
+    }
+    
 }
