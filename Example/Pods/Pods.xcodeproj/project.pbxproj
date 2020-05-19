@@ -14,9 +14,6 @@
 		66F6AC99246A6DFC007AA9F1 /* YXTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F6AC92246A6DFC007AA9F1 /* YXTextField.swift */; };
 		66F6AC9A246A6DFC007AA9F1 /* YXMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F6AC93246A6DFC007AA9F1 /* YXMatch.swift */; };
 		66F6AC9B246A6DFC007AA9F1 /* YXMatch.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66F6AC93246A6DFC007AA9F1 /* YXMatch.swift */; };
-		66FA06C0246D340F001683AF /* DelegateRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FA06BF246D340E001683AF /* DelegateRelay.swift */; };
-		66FA06C1246D340F001683AF /* DelegateRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FA06BF246D340E001683AF /* DelegateRelay.swift */; };
-		66FA06C2246D340F001683AF /* DelegateRelay.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FA06BF246D340E001683AF /* DelegateRelay.swift */; };
 		66FA0734247288B1001683AF /* FirstDifferenceBetweenStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FA0733247288B1001683AF /* FirstDifferenceBetweenStrings.swift */; };
 		66FA0735247288B1001683AF /* FirstDifferenceBetweenStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FA0733247288B1001683AF /* FirstDifferenceBetweenStrings.swift */; };
 		66FA0736247288B1001683AF /* FirstDifferenceBetweenStrings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 66FA0733247288B1001683AF /* FirstDifferenceBetweenStrings.swift */; };
@@ -65,7 +62,6 @@
 		66F6AC91246A6DFC007AA9F1 /* YXTextView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YXTextView.swift; sourceTree = "<group>"; };
 		66F6AC92246A6DFC007AA9F1 /* YXTextField.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YXTextField.swift; sourceTree = "<group>"; };
 		66F6AC93246A6DFC007AA9F1 /* YXMatch.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = YXMatch.swift; sourceTree = "<group>"; };
-		66FA06BF246D340E001683AF /* DelegateRelay.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = DelegateRelay.swift; sourceTree = "<group>"; };
 		66FA0733247288B1001683AF /* FirstDifferenceBetweenStrings.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = FirstDifferenceBetweenStrings.swift; sourceTree = "<group>"; };
 		6EE7CCAEF685370B03BBB5E1B1D18A7A /* README.md */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		8C90AFDF5C69164794EA56BA53A17CBE /* YXInputKit.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; path = YXInputKit.debug.xcconfig; sourceTree = "<group>"; };
@@ -173,7 +169,6 @@
 			isa = PBXGroup;
 			children = (
 				66FA0733247288B1001683AF /* FirstDifferenceBetweenStrings.swift */,
-				66FA06BF246D340E001683AF /* DelegateRelay.swift */,
 				66F6AC91246A6DFC007AA9F1 /* YXTextView.swift */,
 				66F6AC92246A6DFC007AA9F1 /* YXTextField.swift */,
 				66F6AC93246A6DFC007AA9F1 /* YXMatch.swift */,
@@ -400,7 +395,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				66FA06C1246D340F001683AF /* DelegateRelay.swift in Sources */,
 				67FE6FF051F009EC9DA9333F81ABE163 /* Pods-YXInputKit_Tests-dummy.m in Sources */,
 				66FA0735247288B1001683AF /* FirstDifferenceBetweenStrings.swift in Sources */,
 			);
@@ -414,7 +408,6 @@
 				66F6AC99246A6DFC007AA9F1 /* YXTextField.swift in Sources */,
 				66F6AC9B246A6DFC007AA9F1 /* YXMatch.swift in Sources */,
 				3869403DC2B92D612A53C238184F6197 /* YXInputKit-dummy.m in Sources */,
-				66FA06C2246D340F001683AF /* DelegateRelay.swift in Sources */,
 				66FA0736247288B1001683AF /* FirstDifferenceBetweenStrings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -427,7 +420,6 @@
 				66F6AC98246A6DFC007AA9F1 /* YXTextField.swift in Sources */,
 				66F6AC9A246A6DFC007AA9F1 /* YXMatch.swift in Sources */,
 				6B7606171008C708BA2B6BFDFE1D15CD /* Pods-YXInputKit_Example-dummy.m in Sources */,
-				66FA06C0246D340F001683AF /* DelegateRelay.swift in Sources */,
 				66FA0734247288B1001683AF /* FirstDifferenceBetweenStrings.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

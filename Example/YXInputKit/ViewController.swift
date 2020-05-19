@@ -18,6 +18,7 @@ class ViewController: UIViewController {
         textField.rightPadding = 10
         let leftButton = UIButton()
         leftButton.setTitle("left", for: .normal)
+        leftButton.setTitleColor(.darkGray, for: .normal)
 
         textField.leftAttachView = leftButton
         let clearView = UILabel()
@@ -42,48 +43,23 @@ class ViewController: UIViewController {
         
         
         let textView = YXTextView(frame: CGRect(x: 20, y: 150, width: view.bounds.width - 40, height: 120))
-        textView.limitNumbers = 30
-        textView.text = "因为公司有很多模块，几乎每个模块都需要发布视频、"
+        textView.limitNumbers = 2000
+        textView.text = """
+        UITextView supports the display of text using custom style information and also supports text editing. You typically use a text view to display multiple lines of text, such as when displaying the body of a large text document.
+
+        This class supports multiple text styles through use of the attributedText property. (Styled text is not supported in versions of iOS earlier than iOS 6.) Setting a value for this property causes the text view to use the style information provided in the attributed string. You can still use the font, textColor, and textAlignment properties to set style attributes, but those properties apply to all of the text in the text view. It’s recommended that you use a text view—and not a UIWebView object—to display both plain and rich text in your app.
+        """
         textView.isCounterEnable = true
         textView.placeholder = "please input something"
         textView.counterClosure = { (count, maxValue, label) in
-//            print("TextView counter: \(count)/\(maxValue)")
+            print("TextView counter: \(count)/\(maxValue)")
         }
         textView.layer.borderColor = UIColor.red.cgColor
         textView.layer.borderWidth = 5.0
         textView.layer.cornerRadius = 10
-        textView.textContainerInset = UIEdgeInsets(top: 15, left: 15, bottom: 45, right: 5)
+        textView.textContainerInset = UIEdgeInsets(top: 15, left: 15, bottom: 35, right: 5)
         textView.counterPadding = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 10)
-        textView.delegate = self
         view.addSubview(textView)
-
-        let stackView = UIStackView()
-        stackView.translatesAutoresizingMaskIntoConstraints = false
-        
-        
-        let spacingView = SpacingView()
-        
-        spacingView.translatesAutoresizingMaskIntoConstraints = false
-//        spacingView.setContentCompressionResistancePriority(.required, for: .horizontal)
-        stackView.addArrangedSubview(spacingView)
-        
-        stackView.sizeToFit()
-        print(stackView)
-
-        let string = "12345"
-        print(string[string.startIndex..<string.index(string.startIndex, offsetBy: 2)])
-        
-//        let systemTextField = UITextField(frame: CGRect(x: 30, y: 330, width: view.bounds.width - 60, height: 44))
-//        systemTextField.placeholder = "please input something"
-//        systemTextField.leftView = stackView
-//        systemTextField.leftViewMode = .always
-//        view.addSubview(systemTextField)
-//        view.layoutIfNeeded()
-//        NSLayoutConstraint.activate([
-//            stackView.leadingAnchor.constraint(equalTo: systemTextField.leadingAnchor),
-//            stackView.topAnchor.constraint(equalTo: systemTextField.topAnchor),
-//            stackView.bottomAnchor.constraint(equalTo: systemTextField.bottomAnchor)
-//        ])
 
     }
 
@@ -96,28 +72,4 @@ class ViewController: UIViewController {
         view.endEditing(true)
     }
 
-}
-
-extension ViewController: UITextViewDelegate {
-    func textViewShouldBeginEditing(_ textView: UITextView) -> Bool {
-         print("textViewShouldBeginEditing")
-        return true
-    }
-}
-
-class SpacingView: UIView {
-    override init(frame: CGRect) {
-        super.init(frame: frame)
-        backgroundColor = UIColor.blue
-        
-    }
-    
-    override var intrinsicContentSize: CGSize {
-        return CGSize(width: 10, height: 44)
-    }
-    
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-         backgroundColor = UIColor.blue
-    }
 }

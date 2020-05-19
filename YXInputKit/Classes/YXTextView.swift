@@ -82,6 +82,7 @@ open class YXTextView: UITextView {
         didSet {
             placeholderLabel.isHidden = text.count > 0
             if let text = text {
+                cacheText = cacheText.isEmpty ? text : cacheText
                 updateCounterDisplay(text.count)
             }
         }
@@ -106,22 +107,10 @@ open class YXTextView: UITextView {
     
     private var cacheText: String = ""
     
-    fileprivate var cacheSelectedRange: NSRange = NSRange()
-    
     @IBInspectable var isTransparent = false {
         didSet {
             guard let containerView = containerView else { return }
             containerView.layer.mask = isTransparent ? nil : visableLayer
-        }
-    }
-    
-    private var delegateRelay: TextViewDelegateRelay?
-    open override var delegate: UITextViewDelegate? {
-        get { super.delegate }
-        set {
-            let delegateRelay = TextViewDelegateRelay(realDelegate: newValue)
-            super.delegate = delegateRelay
-            self.delegateRelay = delegateRelay
         }
     }
     
@@ -150,7 +139,6 @@ open class YXTextView: UITextView {
             containerView = view
         }
         isTransparent = false
-        self.delegate = nil
     }
     
     
@@ -188,10 +176,13 @@ open class YXTextView: UITextView {
         placeholderLabel.isHidden = text.count > 0
         if markedTextRange?.start == nil, isCounterEnable {
             updateLimitNumberOfText()
+            if let selectedRange = selectedTextRange {
+                let cursorFrame = caretRect(for: selectedRange.start)
+                if cursorFrame.maxY > visableLayer.frame.maxY && !isTransparent {
+                    setContentOffset(CGPoint(x: 0, y: contentOffset.y + font!.lineHeight), animated: false)
+                }
+            }
         }
-        
-        let offset = contentSize.height > bounds.height ? contentSize.height - bounds.height : 0
-        setContentOffset(CGPoint(x: 0, y: offset), animated: false)
     }
     
     
@@ -220,8 +211,7 @@ open class YXTextView: UITextView {
     
     private func updateLimitNumberOfText() {
  
-        let length = text.count
-        if length > limitNumbers {
+        if text.count > limitNumbers {
             
             let diffResult = firstDifferenceBetweenStrings(s1: text, s2: cacheText)
             if case .noDifference = diffResult  {
@@ -231,50 +221,26 @@ open class YXTextView: UITextView {
                 /// get left text
                 let leftIndexRange = text.startIndex..<text.index(text.startIndex, offsetBy: leftIndex)
                 let left = String(text[leftIndexRange])
-
-                let reverseText = String(text.reversed())
-                let reverseCacheText = String(cacheText.reversed())
-                let rightDiffResult = firstDifferenceBetweenStrings(s1: reverseText, s2: reverseCacheText)
-                if case let .differenceAtIndex(rightIndex) = rightDiffResult {
-                    /// get right text
-                    let right = String(text[text.index(text.startIndex, offsetBy: text.count - rightIndex)..<text.endIndex])
-                    
-
-                    var insertText = text!
-                    let insertStartIndex = insertText.index(insertText.startIndex, offsetBy: leftIndex)
-                    let insertEndIndex = insertText.index(insertStartIndex, offsetBy: limitNumbers - left.count - right.count)
-                    /// get the string to be inserted
-                    insertText = String(insertText[insertStartIndex..<insertEndIndex])
-                    
-                    text = left + insertText + right
-                    let selectText = left + insertText
-                    let selectedRangeLenght = (selectText as NSString).range(of: selectText).length
-                    self.selectedRange.location = selectedRangeLenght
-                }
+                
+                /// get right text
+                let right = text[text.index(text.index(text.startIndex, offsetBy: leftIndex), offsetBy: text.count - cacheText.count)..<text.endIndex]
+                var insertText = text!
+                let insertStartIndex = insertText.index(insertText.startIndex, offsetBy: leftIndex)
+                let insertEndIndex = insertText.index(insertStartIndex, offsetBy: limitNumbers - left.count - right.count)
+                
+                /// get the string to be inserted
+                insertText = String(insertText[insertStartIndex..<insertEndIndex])
+                
+                text = left + insertText + right
+                let selectText = left + insertText
+                let selectedRangeLenght = (selectText as NSString).range(of: selectText).length
+                self.selectedRange.location = selectedRangeLenght
+                
             }
-            updateCounterDisplay(text.count)
-        } else {
-            updateCounterDisplay(length)
         }
         
+        updateCounterDisplay(text.count)
         cacheText = text
-    }
-    
-    func getSubString(from string: String, limitLength: Int) -> String {
-        let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        guard let data = string.data(using: encoding), limitLength > 0 else { return "" }
-        let length = data.count
-        if length >= limitLength {
-            let subData = data.subdata(in: 0 ..< limitLength)
-            // 当截取超出最大长度字符时把中文字符截断返回的 content 会是 nil
-            var content = String(data: subData, encoding: encoding)
-            if content == nil {
-                let subData = data.subdata(in: 0 ..< limitLength - 1)
-                content = String(data: subData, encoding: encoding)
-            }
-            return content ?? ""
-        }
-        return ""
     }
     
     func updateCounterStyle() {
@@ -299,109 +265,4 @@ open class YXTextView: UITextView {
             closure(words, limitNumbers, counterLabel)
         }
     }
-    
-}
-
-//MARK: - TextViewDelegateRelay
-fileprivate class TextViewDelegateRelay: DelegateRelay, UITextViewDelegate  {
-  
-    @available(iOS 2.0, *)
-    func textViewShouldBeginEditing(_ textView: UITextView) -> Bool  {
-        if canResponseSelector(#selector(textViewShouldBeginEditing(_:))) {
-            return realDelegate?.textViewShouldBeginEditing(textView) ?? true
-        }
-        return true
-    }
-    
-    @available(iOS 2.0, *)
-    func textViewShouldEndEditing(_ textView: UITextView) -> Bool {
-        if canResponseSelector(#selector(textViewShouldEndEditing(_:))) {
-            return realDelegate?.textViewShouldEndEditing(textView) ?? true
-        }
-        return true
-    }
-    
-    @available(iOS 2.0, *)
-    func textViewDidBeginEditing(_ textView: UITextView) {
-        if canResponseSelector(#selector(textViewDidBeginEditing(_:))) {
-            realDelegate?.textViewDidBeginEditing(textView)
-        }
-    }
-    
-    @available(iOS 2.0, *)
-    func textViewDidEndEditing(_ textView: UITextView) {
-        if canResponseSelector(#selector(textViewDidEndEditing(_:))) {
-            realDelegate?.textViewDidEndEditing(textView)
-        }
-    }
-    
-    
-    @available(iOS 2.0, *)
-    func textView(_ textView: UITextView, shouldChangeTextIn range: NSRange, replacementText text: String) -> Bool {
-        
-        if let textView = textView as? YXTextView, textView.markedTextRange?.start == nil {
-            textView.cacheSelectedRange = textView.selectedRange
-        }
-        
-        if canResponseSelector(#selector(textView(_:shouldChangeTextIn:replacementText:))) {
-            return realDelegate?.textView(textView, shouldChangeTextIn: range, replacementText: text) ?? true
-        }
-        
-        return true
-        
-    }
-    
-    @available(iOS 2.0, *)
-    func textViewDidChange(_ textView: UITextView) {
-        if canResponseSelector(#selector(textViewDidChange(_:))) {
-            realDelegate?.textViewDidChange?(textView)
-        }
-    }
-    
-    @available(iOS 2.0, *)
-    func textViewDidChangeSelection(_ textView: UITextView) {
-        if canResponseSelector(#selector(textViewDidChangeSelection(_:))) {
-            realDelegate?.textViewDidChangeSelection?(textView)
-        }
-    }
-    
-    @available(iOS 10.0, *)
-    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:interaction:) as (UITextView, URL, NSRange, UITextItemInteraction) -> Bool)) {
-            return realDelegate?.textView(textView, shouldInteractWith: URL, in: characterRange, interaction: interaction) ?? true
-        }
-        return true
-    }
-    
-    @available(iOS 10.0, *)
-    func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange, interaction: UITextItemInteraction) -> Bool {
-        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:interaction:) as (UITextView, NSTextAttachment, NSRange, UITextItemInteraction) -> Bool)) {
-            return realDelegate?.textView(textView, shouldInteractWith: textAttachment, in: characterRange, interaction: interaction) ?? true
-        }
-        return true
-    }
-    
-    @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView(_:shouldInteractWith:in:interaction:) instead.")
-    func textView(_ textView: UITextView, shouldInteractWith URL: URL, in characterRange: NSRange) -> Bool {
-        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:) as (UITextView, URL, NSRange) -> Bool)) {
-            return realDelegate?.textView(textView, shouldInteractWith: URL, in: characterRange) ?? true
-        }
-        return true
-    }
-    
-    @available(iOS, introduced: 7.0, deprecated: 10.0, message: "Use textView(_:shouldInteractWith:in:interaction:) instead.")
-    func textView(_ textView: UITextView, shouldInteractWith textAttachment: NSTextAttachment, in characterRange: NSRange) -> Bool {
-        if canResponseSelector(#selector(textView(_:shouldInteractWith:in:) as (UITextView, NSTextAttachment, NSRange) -> Bool)) {
-            return realDelegate?.textView(textView, shouldInteractWith: textAttachment, in: characterRange) ?? true
-        }
-        return true
-    }
-    
-    func canResponseSelector(_ selector: Selector) -> Bool {
-        if let canResponse = realDelegate?.responds(to: selector), canResponse {
-            return true
-        }
-        return false
-    }
-    
 }
