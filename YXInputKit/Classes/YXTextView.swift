@@ -222,32 +222,42 @@ open class YXTextView: UITextView {
  
         let length = text.count
         if length > limitNumbers {
-            let prefixStartIndex = text.startIndex
-            let prefixEndIndex = text.index(prefixStartIndex, offsetBy: self.cacheSelectedRange.location)
-            let prefixString = text[prefixStartIndex..<prefixEndIndex]
             
-            let suffixStartIndex = text.index(prefixStartIndex, offsetBy: selectedRange.location)
-            let suffixString = text[suffixStartIndex..<text.endIndex]
+            let diffResult = firstDifferenceBetweenStrings(s1: text, s2: cacheText)
+            if case .noDifference = diffResult  {
+                return
+            } else if case let .differenceAtIndex(leftIndex) = diffResult {
+                
+                /// get left text
+                let leftIndexRange = text.startIndex..<text.index(text.startIndex, offsetBy: leftIndex)
+                let left = String(text[leftIndexRange])
 
-            var addText = text!
-            addText.removeSubrange(suffixStartIndex..<text.endIndex)
-            let addEndIndex = addText.index(prefixStartIndex, offsetBy: self.cacheSelectedRange.location)
-            addText.removeSubrange(addText.startIndex..<addEndIndex)
-            
-            /// Remaining length
-            let remainLength = limitNumbers - String(prefixString).count - String(suffixString).count
-            let insertText = getSubString(from: addText, limitLength: remainLength)
-            text = prefixString + insertText + suffixString
-            self.cacheSelectedRange.location = self.cacheSelectedRange.location + insertText.count
-            self.cacheSelectedRange.length = 0;
-            selectedRange = self.cacheSelectedRange
+                let reverseText = String(text.reversed())
+                let reverseCacheText = String(cacheText.reversed())
+                let rightDiffResult = firstDifferenceBetweenStrings(s1: reverseText, s2: reverseCacheText)
+                if case let .differenceAtIndex(rightIndex) = rightDiffResult {
+                    /// get right text
+                    let right = String(text[text.index(text.startIndex, offsetBy: text.count - rightIndex)..<text.endIndex])
+                    
+
+                    var insertText = text!
+                    let insertStartIndex = insertText.index(insertText.startIndex, offsetBy: leftIndex)
+                    let insertEndIndex = insertText.index(insertStartIndex, offsetBy: limitNumbers - left.count - right.count)
+                    /// get the string to be inserted
+                    insertText = String(insertText[insertStartIndex..<insertEndIndex])
+                    
+                    text = left + insertText + right
+                    let selectText = left + insertText
+                    let selectedRangeLenght = (selectText as NSString).range(of: selectText).length
+                    self.selectedRange.location = selectedRangeLenght
+                }
+            }
             updateCounterDisplay(text.count)
         } else {
             updateCounterDisplay(length)
         }
         
         cacheText = text
-        self.cacheSelectedRange = selectedRange
     }
     
     func getSubString(from string: String, limitLength: Int) -> String {

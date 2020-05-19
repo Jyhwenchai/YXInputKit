@@ -12,7 +12,21 @@ private class PaddingView: UIView {
     
     var spacing: CGFloat = 0
     
+    override init(frame: CGRect) {
+        super.init(frame: frame)
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+    
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        translatesAutoresizingMaskIntoConstraints = false
+    }
+    
     override var intrinsicContentSize: CGSize {
+        return CGSize(width: spacing, height: 0)
+    }
+    
+    override func sizeThatFits(_ size: CGSize) -> CGSize {
         return CGSize(width: spacing, height: 0)
     }
 }
@@ -31,9 +45,8 @@ open class YXTextField: UITextField {
                 oldView.removeFromSuperview()
                 leftContainerView.removeArrangedSubview(oldView)
             }
-            if let view = rightAttachView {
-                let index = clearView == nil ? 0 : 1
-                leftContainerView.insertArrangedSubview(view, at: index)
+            if let view = leftAttachView {
+                leftContainerView.addArrangedSubview(view)
             }
             setNeedsLayout()
         }
@@ -61,6 +74,7 @@ open class YXTextField: UITextField {
                 rightContainerView.removeArrangedSubview(oldView)
             }
             if let view = rightAttachView {
+                view.translatesAutoresizingMaskIntoConstraints = false
                 let index = rightContainerView.arrangedSubviews.count - 1
                 rightContainerView.insertArrangedSubview(view, at: index)
                 view.tag = index
@@ -92,6 +106,7 @@ open class YXTextField: UITextField {
                 rightContainerView.removeArrangedSubview(oldView)
             }
             if let view = clearView {
+                view.translatesAutoresizingMaskIntoConstraints = false
                 rightContainerView.insertArrangedSubview(view, at: 0)
                 view.isUserInteractionEnabled = true
                 view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(textClearAction)))
@@ -236,10 +251,12 @@ open class YXTextField: UITextField {
         
         layer.addSublayer(backgroundLayer)
         
+        leftContainerView.translatesAutoresizingMaskIntoConstraints = false
         leftContainerView.addArrangedSubview(leftPaddingView)
         leftView = leftContainerView;
         leftViewMode = .always
         
+        rightContainerView.translatesAutoresizingMaskIntoConstraints = false
         rightContainerView.addArrangedSubview(rightPaddingView)
         rightView = rightContainerView
         rightViewMode = .always
@@ -257,6 +274,30 @@ open class YXTextField: UITextField {
         backgroundLayer.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
     }
     
+    
+    private var isFixedConstrraints = false
+    open override func updateConstraints() {
+        super.updateConstraints()
+        if let _ = leftContainerView.superview, let _ = rightContainerView.superview, !isFixedConstrraints {
+            isFixedConstrraints = true
+            NSLayoutConstraint.activate([
+                leftContainerView.leadingAnchor.constraint(equalTo: leadingAnchor),
+                leftContainerView.topAnchor.constraint(equalTo: topAnchor),
+                leftContainerView.bottomAnchor.constraint(equalTo: bottomAnchor),
+                
+                rightContainerView.rightAnchor.constraint(equalTo: rightAnchor),
+                rightContainerView.topAnchor.constraint(equalTo: topAnchor),
+                rightContainerView.bottomAnchor.constraint(equalTo: bottomAnchor),
+
+                leftPaddingView.heightAnchor.constraint(equalToConstant: bounds.height),
+                rightPaddingView.heightAnchor.constraint(equalToConstant: bounds.height)
+            ])
+            
+            setNeedsLayout()
+            layoutIfNeeded()
+        }
+    }
+
     open override var font: UIFont? {
         didSet { placeholderFont = font ?? UIFont.systemFont(ofSize: 15)}
     }
@@ -312,20 +353,10 @@ private extension YXTextField {
     
     private func updateLimitNumberOfText() {
         guard let string = text else { return }
-        let encoding = String.Encoding(rawValue: CFStringConvertEncodingToNSStringEncoding(CFStringEncoding(CFStringEncodings.GB_18030_2000.rawValue)))
-        
-        guard let data = string.data(using: encoding) else { return }
-        let length = data.count
+        let length = string.count
         if length > limitNumbers {
-            let subData = data.subdata(in: 0 ..< limitNumbers)
-            // 当截取超出最大长度字符时把中文字符截断返回的 content 会是 nil
-            var content = String(data: subData, encoding: encoding)
-            if content == nil {
-                let subData = data.subdata(in: 0 ..< limitNumbers - 1)
-                content = String(data: subData, encoding: encoding)
-            }
-            text =  content
-            updateCounterDisplay(limitNumbers)
+            text = String(string[string.startIndex..<string.index(string.startIndex, offsetBy: limitNumbers)])
+            updateCounterDisplay(text!.count)
         } else {
             text = string
             updateCounterDisplay(length)
@@ -361,6 +392,7 @@ private extension YXTextField {
        
         if secureEntryButton == nil {
             secureEntryButton = UIButton()
+            secureEntryButton?.translatesAutoresizingMaskIntoConstraints = false
             secureEntryButton?.setImage(secureEntryOnImage, for: .selected)
             secureEntryButton?.setImage(secureEntryOffImage, for: .normal)
             secureEntryButton?.contentEdgeInsets = secureEntryInsets
