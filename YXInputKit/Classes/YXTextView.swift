@@ -81,10 +81,12 @@ open class YXTextView: UITextView {
     open override var text: String! {
         didSet {
             placeholderLabel.isHidden = text.count > 0
-            if let text = text {
-                cacheText = cacheText.isEmpty ? text : cacheText
-                updateCounterDisplay(text.count)
+            if text.count > limitNumbers {
+                self.text = String(text[text.startIndex..<text.index(text.startIndex, offsetBy: limitNumbers)])
             }
+            cacheText = cacheText.isEmpty ? text : cacheText
+            updateCounterDisplay(text.count)
+            
         }
     }
     
@@ -176,15 +178,20 @@ open class YXTextView: UITextView {
         placeholderLabel.isHidden = text.count > 0
         if markedTextRange?.start == nil, isCounterEnable {
             updateLimitNumberOfText()
-            if let selectedRange = selectedTextRange {
-                let cursorFrame = caretRect(for: selectedRange.start)
-                if cursorFrame.maxY > visableLayer.frame.maxY && !isTransparent {
-                    setContentOffset(CGPoint(x: 0, y: contentOffset.y + font!.lineHeight), animated: false)
-                }
-            }
+            adjustmentContentOffset()
         }
     }
     
+    
+    private func adjustmentContentOffset() {
+        if let selectedRange = selectedTextRange {
+            let cursorFrame = caretRect(for: selectedRange.start)
+            let counterY = bounds.height - counterLabel.bounds.height - counterPadding.bottom + contentOffset.y;
+            if ceil(counterY) < ceil(cursorFrame.maxY) && !isTransparent {
+                setContentOffset(CGPoint(x: 0, y: contentOffset.y + font!.lineHeight), animated: false)
+            }
+        }
+    }
     
     private func updatePlaceholder() {
         if let placeholder = placeholder {
@@ -212,7 +219,6 @@ open class YXTextView: UITextView {
     private func updateLimitNumberOfText() {
  
         if text.count > limitNumbers {
-            
             let diffResult = firstDifferenceBetweenStrings(s1: text, s2: cacheText)
             if case .noDifference = diffResult  {
                 return
@@ -233,8 +239,8 @@ open class YXTextView: UITextView {
                 
                 text = left + insertText + right
                 let selectText = left + insertText
-                let selectedRangeLenght = (selectText as NSString).range(of: selectText).length
-                self.selectedRange.location = selectedRangeLenght
+                let selectedRangeLength = (selectText as NSString).range(of: selectText).length
+                self.selectedRange.location = selectedRangeLength
                 
             }
         }

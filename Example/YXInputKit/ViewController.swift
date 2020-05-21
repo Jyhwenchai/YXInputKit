@@ -42,8 +42,8 @@ class ViewController: UIViewController {
         view.addSubview(textField)
         
         
-        let textView = YXTextView(frame: CGRect(x: 20, y: 150, width: view.bounds.width - 40, height: 120))
-        textView.limitNumbers = 2000
+        let textView = YXTextView(frame: CGRect(x: 20, y: 200, width: view.bounds.width - 40, height: 120))
+        textView.limitNumbers = 500
         textView.text = """
         UITextView supports the display of text using custom style information and also supports text editing. You typically use a text view to display multiple lines of text, such as when displaying the body of a large text document.
 
@@ -52,15 +52,16 @@ class ViewController: UIViewController {
         textView.isCounterEnable = true
         textView.placeholder = "please input something"
         textView.counterClosure = { (count, maxValue, label) in
-            print("TextView counter: \(count)/\(maxValue)")
+//            print("TextView counter: \(count)/\(maxValue)")
         }
+        textView.backgroundColor = UIColor.orange
         textView.layer.borderColor = UIColor.red.cgColor
         textView.layer.borderWidth = 5.0
         textView.layer.cornerRadius = 10
         textView.textContainerInset = UIEdgeInsets(top: 15, left: 15, bottom: 35, right: 5)
         textView.counterPadding = UIEdgeInsets(top: 0, left: 0, bottom: 10, right: 10)
         view.addSubview(textView)
-
+        
     }
 
     override func didReceiveMemoryWarning() {
