@@ -176,7 +176,7 @@ open class YXTextView: UITextView {
     
     @objc private func textDidChanged() {
         placeholderLabel.isHidden = text.count > 0
-        if markedTextRange?.start == nil, isCounterEnable {
+        if markedTextRange?.start == nil {
             updateLimitNumberOfText()
             adjustmentContentOffset()
         }
