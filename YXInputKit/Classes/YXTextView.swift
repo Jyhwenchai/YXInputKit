@@ -169,7 +169,7 @@ open class YXTextView: UITextView {
         counterLabel.frame = counterFrame
         
         CATransaction.begin()
-        _  = CATransaction.setDisableActions(true)
+        CATransaction.setDisableActions(true)
         visableLayer.frame = CGRect(x: 0, y: contentOffset.y, width: bounds.width, height: bounds.height - textContainerInset.bottom)
         CATransaction.commit()
     }

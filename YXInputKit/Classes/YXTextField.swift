@@ -222,7 +222,7 @@ open class YXTextField: UITextField {
         didSet { updateCounterStyle() }
     }
     
-    open var counterClosure: ((Int, Int, UILabel) -> ())? {
+    open var counterClosure: ((Int, Int, UILabel?) -> ())? {
         didSet { updateCounterDisplay(text?.count ?? 0) }
     }
     
@@ -428,8 +428,9 @@ private extension YXTextField {
     }
     
     func updateCounterDisplay(_ words: Int) {
-        guard let counterLabel = counterLabel else { return }
-        counterLabel.text = "\(words)/\(limitNumbers)"  // default display style
+        if let counterLabel = counterLabel {
+            counterLabel.text = "\(words)/\(limitNumbers)"  // default display style
+        }
         if let closure = counterClosure {
             closure(words, limitNumbers, counterLabel)
         }
