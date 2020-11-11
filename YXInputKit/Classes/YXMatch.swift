@@ -29,6 +29,11 @@ public struct NumberMatch: Matcher {
     public var prefix: UInt = 0
     public var suffix: UInt = 0
     
+    public init(prefix: UInt, suffix: UInt = 0) {
+        self.prefix = prefix
+        self.suffix = suffix
+    }
+    
     public func match(_ input: String) -> Bool {
         
         /// 匹配整数
