@@ -44,11 +44,6 @@ class ViewController: UIViewController {
         
         let textView = YXTextView(frame: CGRect(x: 20, y: 200, width: view.bounds.width - 40, height: 120))
         textView.limitNumbers = 500
-        textView.text = """
-        UITextView supports the display of text using custom style information and also supports text editing. You typically use a text view to display multiple lines of text, such as when displaying the body of a large text document.
-
-        This class supports multiple text styles through use of the attributedText property. (Styled text is not supported in versions of iOS earlier than iOS 6.) Setting a value for this property causes the text view to use the style information provided in the attributed string. You can still use the font, textColor, and textAlignment properties to set style attributes, but those properties apply to all of the text in the text view. It’s recommended that you use a text view—and not a UIWebView object—to display both plain and rich text in your app.
-        """
         textView.isCounterEnable = true
         textView.placeholder = "please input something"
         textView.counterClosure = { (count, maxValue, label) in

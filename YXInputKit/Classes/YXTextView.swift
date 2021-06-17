@@ -178,18 +178,6 @@ open class YXTextView: UITextView {
         placeholderLabel.isHidden = text.count > 0
         if markedTextRange?.start == nil {
             updateLimitNumberOfText()
-            adjustmentContentOffset()
-        }
-    }
-    
-    
-    private func adjustmentContentOffset() {
-        if let selectedRange = selectedTextRange {
-            let cursorFrame = caretRect(for: selectedRange.start)
-            let counterY = bounds.height - counterLabel.bounds.height - counterPadding.bottom + contentOffset.y;
-            if ceil(counterY) < ceil(cursorFrame.maxY) && !isTransparent {
-                setContentOffset(CGPoint(x: 0, y: contentOffset.y + font!.lineHeight), animated: false)
-            }
         }
     }
     
