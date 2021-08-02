@@ -120,39 +120,32 @@ open class YXTextField: UITextField {
     //MARK: - Border
     @IBInspectable open var borderWidth: CGFloat = 0 {
         didSet {
-            backgroundLayer.lineWidth = borderWidth
+            backgroundView.layer.borderWidth = borderWidth
         }
     }
     
     @IBInspectable open var borderColor: UIColor = .clear {
         didSet {
-            backgroundLayer.strokeColor = borderColor.cgColor
+            backgroundView.layer.borderColor = borderColor.cgColor
         }
     }
     
     @IBInspectable open var cornerRadius: CGFloat = 0 {
         didSet {
-            backgroundLayer.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+            backgroundView.layer.cornerRadius = cornerRadius
         }
     }
     
-    private var backgroundLayer: CAShapeLayer = {
-        let layer = CAShapeLayer()
-        layer.strokeStart = 0
-        layer.strokeEnd = 1
-        layer.fillColor = UIColor.clear.cgColor
-        return layer
+    private var backgroundView: UIView = {
+        let view = UIView()
+        view.isUserInteractionEnabled = false
+        view.backgroundColor = UIColor.clear
+        return view
     }()
     
     open override var backgroundColor: UIColor? {
-        set { backgroundLayer.fillColor = newValue?.cgColor }
-        get {
-            if let fillColor = backgroundLayer.fillColor {
-                return UIColor(cgColor: fillColor)
-            } else {
-                return nil
-            }
-        }
+        get { backgroundView.backgroundColor }
+        set { backgroundView.backgroundColor = newValue }
     }
     
     //MARK: - Placeholder
@@ -249,7 +242,7 @@ open class YXTextField: UITextField {
     
     func setup() {
         
-        layer.addSublayer(backgroundLayer)
+        addSubview(backgroundView)
         
         leftContainerView.translatesAutoresizingMaskIntoConstraints = false
         leftContainerView.addArrangedSubview(leftPaddingView)
@@ -271,7 +264,7 @@ open class YXTextField: UITextField {
     
     open override func layoutSubviews() {
         super.layoutSubviews()
-        backgroundLayer.path = UIBezierPath(roundedRect: bounds, cornerRadius: cornerRadius).cgPath
+        backgroundView.frame = bounds
     }
     
     

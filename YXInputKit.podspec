@@ -8,7 +8,7 @@
 
 Pod::Spec.new do |s|
 s.name             = 'YXInputKit'
-s.version          = '0.1.8'
+s.version          = '0.1.9'
 s.summary          = 'Subclasses of UITextField and UITextView'
 s.description      = 'Subclasses of UITextField and UITextView. Provide placeholder, secureTextEntry, clearView support for UITextField, so that UITextField and UITextView provide the ability to count words.'
 s.homepage         = 'https://github.com/Jyhwenchai/YXInputKit'
