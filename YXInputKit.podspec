@@ -16,6 +16,6 @@ s.license          = { :type => 'MIT', :file => 'LICENSE' }
 s.author           = { 'Jyhwenchai' => 'cai5301@qq.com' }
 s.source           = { :git => 'https://github.com/Jyhwenchai/YXInputKit.git', :tag => s.version.to_s }
 s.ios.deployment_target = '9.0'
-s.swift_version = '5.0'
-s.source_files = 'YXInputKit/Classes/**/*'
+s.swift_version = '5.6'
+s.source_files = 'Sources/YXInputKit/**/*'
 end

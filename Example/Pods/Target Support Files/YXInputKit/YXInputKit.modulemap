@@ -1,6 +1,0 @@
-framework module YXInputKit {
-  umbrella header "YXInputKit-umbrella.h"
-
-  export *
-  module * { export * }
-}
