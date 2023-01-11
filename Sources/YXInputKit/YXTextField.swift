@@ -192,7 +192,7 @@ open class YXTextField: UITextField {
     
     open override var isSecureTextEntry: Bool {
         didSet {
-            secureEntryButton?.isSelected = isSecureTextEntry
+            secureEntryButton?.isSelected = !isSecureTextEntry
         }
     }
     
