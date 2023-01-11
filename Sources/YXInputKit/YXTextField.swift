@@ -389,7 +389,7 @@ private extension YXTextField {
             secureEntryButton?.setImage(secureEntryOnImage, for: .selected)
             secureEntryButton?.setImage(secureEntryOffImage, for: .normal)
             secureEntryButton?.contentEdgeInsets = secureEntryInsets
-            secureEntryButton?.isSelected = isSecureTextEntry
+            secureEntryButton?.isSelected = !isSecureTextEntry
             secureEntryButton?.sizeToFit()
             secureEntryButton?.addTarget(self, action: #selector(toggleSecureEntryAction), for: .touchUpInside)
             var index = 0
