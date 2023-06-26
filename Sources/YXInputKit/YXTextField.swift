@@ -116,6 +116,8 @@ open class YXTextField: UITextField {
             setNeedsLayout()
         }
     }
+
+    open var clearClosure: (() -> Void)?
     
     //MARK: - Border
     @IBInspectable open var borderWidth: CGFloat = 0 {
@@ -316,6 +318,7 @@ open class YXTextField: UITextField {
         text = nil
         updateClearViewState()
         updateCounterDisplay(text?.count ?? 0)
+        clearClosure?()
     }
     
     deinit {
